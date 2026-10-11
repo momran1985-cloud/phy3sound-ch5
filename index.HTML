@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة اختبارات الفيزياء - المعيار 12.6.6</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- رأس الصفحة -->
+    <header class="bg-indigo-700 text-white shadow-md py-4 px-6 flex justify-between items-center">
+        <h1 class="text-xl font-bold">اختبار مفاهيم الموجات والاهتزازات (12.6.6)</h1>
+        <div>
+            <button onclick="showScreen('admin-screen')" class="bg-indigo-600 hover:bg-indigo-800 px-3 py-1.5 rounded text-sm font-semibold transition">لوحة تحكم المعلم (الأدمن)</button>
+        </div>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="container mx-auto px-4 py-8 max-w-2xl flex-grow">
+
+        <!-- 1. شاشة تسجيل الطالب -->
+        <div id="login-screen" class="bg-white p-8 rounded-2xl shadow-lg border border-slate-100">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-6 text-center">تسجيل بيانات الطالب</h2>
+            <form id="login-form" onsubmit="startTest(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">اسم الطالب الثلاثي:</label>
+                    <input type="text" id="student-name" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">رقم الهوية الوطنية / الأكاديمية:</label>
+                    <input type="text" id="student-id" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition">بدء الاختبار</button>
+            </form>
+        </div>
+
+        <!-- 2. شاشة الاختبار -->
+        <div id="quiz-screen" class="hidden bg-white p-8 rounded-2xl shadow-lg border border-slate-100">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <span id="question-indicator" class="text-sm font-semibold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full">السؤال 1 من 6</span>
+                <div class="flex items-center gap-2 text-rose-600 font-bold bg-rose-50 px-3 py-1 rounded-full">
+                    <span>الوقت المتبقي:</span>
+                    <span id="timer">30</span> ثانية
+                </div>
+            </div>
+            <!-- شريط التقدم للوقت -->
+            <div class="w-full bg-slate-200 h-2 rounded-full mb-6 overflow-hidden">
+                <div id="timer-bar" class="bg-rose-500 h-full w-full transition-all duration-1000"></div>
+            </div>
+
+            <h3 id="question-text" class="text-lg font-bold mb-6 text-slate-900"></h3>
+            <div id="options-container" class="space-y-3 mb-6"></div>
+
+            <button onclick="nextQuestion()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition">السؤال التالي</button>
+        </div>
+
+        <!-- 3. شاشة التغذية الراجعة والنتيجة -->
+        <div id="result-screen" class="hidden bg-white p-8 rounded-2xl shadow-lg border border-slate-100 text-center">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">نتيجة الاختبار والتغذية الراجعة</h2>
+            <div id="score-display" class="text-4xl font-extrabold text-slate-800 mb-6"></div>
+            <div id="feedback-details" class="text-right space-y-4 mb-6 max-h-96 overflow-y-auto px-2"></div>
+            <button onclick="location.reload()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition">إعادة الاختبار أو تسجيل دخول جديد</button>
+        </div>
+
+        <!-- 4. لوحة تحكم الأدمن -->
+        <div id="admin-screen" class="hidden bg-white p-8 rounded-2xl shadow-lg border border-slate-100">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h2 class="text-2xl font-bold text-indigo-700">لوحة تحكم المعلم (سجلات الطلاب)</h2>
+                <button onclick="showScreen('login-screen')" class="bg-slate-200 px-3 py-1.5 rounded text-sm font-semibold">رجوع</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 border-b">
+                            <th class="p-3">اسم الطالب</th>
+                            <th class="p-3">رقم الهوية</th>
+                            <th class="p-3">الدرجة</th>
+                            <th class="p-3">التاريخ والوقت</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-records"></tbody>
+                </table>
+            </div>
+            <button onclick="clearRecords()" class="mt-6 bg-rose-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-rose-700 transition">مسح كافة السجلات</button>
+        </div>
+
+    </main>
+
+    <!-- تذييل الصفحة -->
+    <footer class="bg-slate-200 text-center py-4 text-xs text-slate-600 mt-8">
+        جميع الحقوق محفوظة - نظام الاختبارات التفاعلية للمؤشرات الفيزيائية
+    </footer>
+
+    <!-- سكربت البرمجة التفاعلية -->
+    <script>
+        // بنك الأسئلة (عينة ممثلة للمؤشرات الستة)
+        const questions = [
+            {
+                q: "في الحركة التوافقية البسيطة، تكون السرعة المتجهة للجسم قيمة عظمى عندما يكون في:",
+                options: ["أقصى إزاحة", "موضع الاتزان", "نصف أقصى إزاحة", "نقطة الانقلاب"],
+                answer: 1,
+                indicator: "ربط خصائص الحركة التوافقية البسيطة بالموجات"
+            },
+            {
+                q: "العلاقة الرياضية الصحيحة التي تربط سرعة الموجة (v) بالتردد (f) والطول الموجي (λ) هي:",
+                options: ["v = f × λ", "v = f / λ", "v = λ / f", "v = f + λ"],
+                answer: 0,
+                indicator: "يوضح معادلات الحركة الموجية"
+            },
+            {
+                q: "في الموجات المستعرضة، تهتز جزيئات الوسط:",
+                options: ["في نفس اتجاه انتشار الموجة", "عمودياً على اتجاه انتشار الموجة", "بشكل دائري منتظم", "في عكس اتجاه الانتشار تماماً"],
+                answer: 1,
+                indicator: "يُميز أنواع الموجات الميكانيكية"
+            },
+            {
+                q: "خاصية الصوت التي تميز بها الأذن بين الأصوات الحادة (الرفيعة) والأصوات الغليظة هي:",
+                options: ["الشدة", "درجة الصوت (التردد)", "نوع الصوت (الطابع)", "سرعة الصوت"],
+                answer: 1,
+                indicator: "يُحدد خصائص الموجات الصوتية"
+            },
+            {
+                q: "ينص مبدأ تراكب الموجات على أن الإزاحة الكلية لموجتين أو أكثر تلتقيان في نقطة تساوي:",
+                options: ["حاصل ضرب إزاحتيهما", "المجموع الجبري للإزاحات الفردية لكل موجة", "الفارق المطلق بينهما دائماً", "صفراً دائماً"],
+                answer: 1,
+                indicator: "يُبين مبدأ تراكب الموجات"
+            },
+            {
+                q: "عندما يقترب مصدر صوتي متحرك من مراقب ساكن، فإن التردد الذي يسمعه المراقب يكون:",
+                options: ["أقل من التردد الحقيقي", "كبر من التردد الحقيقي", "مساوياً للتردد الحقيقي", "يساوي صفراً"],
+                answer: 1,
+                indicator: "يُفسر ظاهرة دوبلر"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let studentData = { name: "", id: "" };
+        let userAnswers = [];
+        let timer;
+        let timeLeft = 30;
+
+        function showScreen(screenId) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.add('hidden');
+            
+            document.getElementById(screenId).classList.remove('hidden');
+            if (screenId === 'admin-screen') loadAdminRecords();
+        }
+
+        function startTest(e) {
+            e.preventDefault();
+            studentData.name = document.getElementById('student-name').value;
+            studentData.id = document.getElementById('student-id').value;
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            showScreen('quiz-screen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            clearInterval(timer);
+            timeLeft = 30;
+            document.getElementById('timer').innerText = timeLeft;
+            document.getElementById('timer-bar').style.width = '100%';
+            
+            startTimer();
+
+            if (currentQuestionIndex >= questions.length) {
+                finishTest();
+                return;
+            }
+
+            const q = questions[currentQuestionIndex];
+            document.getElementById('question-indicator').innerText = `السؤال ${currentQuestionIndex + 1} من ${questions.length}`;
+            document.getElementById('question-text').innerText = q.q;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                optionsContainer.innerHTML += `
+                    <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-indigo-50 transition">
+                        <input type="radio" name="option" value="${index}" class="w-4 h-4 text-indigo-600">
+                        <span class="text-slate-700 font-medium">${opt}</span>
+                    </label>
+                `;
+            });
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft;
+                document.getElementById('timer-bar').style.width = `${(timeLeft / 30) * 100}%`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    nextQuestion();
+                }
+            }, 1000);
+        }
+
+        function nextQuestion() {
+            clearInterval(timer);
+            const selected = document.querySelector('input[name="option"]:checked');
+            const selectedAnswer = selected ? parseInt(selected.value) : -1;
+            
+            userAnswers.push({
+                question: questions[currentQuestionIndex].q,
+                selected: selectedAnswer,
+                correct: questions[currentQuestionIndex].answer,
+                options: questions[currentQuestionIndex].options
+            });
+
+            if (selectedAnswer === questions[currentQuestionIndex].answer) {
+                score++;
+            }
+
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                finishTest();
+            }
+        }
+
+        function finishTest() {
+            showScreen('result-screen');
+            const percentage = (score / questions.length) * 100;
+            document.getElementById('score-display').innerText = `درجتك: ${score} من ${questions.length} (${percentage.toFixed(0)}%)`;
+
+            let feedbackHtml = '';
+            userAnswers.forEach((ans, idx) => {
+                const isCorrect = ans.selected === ans.correct;
+                feedbackHtml += `
+                    <div class="p-4 rounded-xl border ${isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}">
+                        <p class="font-bold text-slate-800">س ${idx + 1}: ${ans.question}</p>
+                        <p class="text-sm mt-1">إجابتك: <span class="${isCorrect ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}">${ans.selected !== -1 ? ans.options[ans.selected] : 'لم تقم بالإجابة (انتهى الوقت)'}</span></p>
+                        ${!isCorrect ? `<p class="text-sm mt-1 text-emerald-700">الإجابة الصحيحة: <strong>${ans.options[ans.correct]}</strong></p>` : ''}
+                    </div>
+                `;
+            });
+            document.getElementById('feedback-details').innerHTML = feedbackHtml;
+
+            // حفظ النتيجة في التخزين المحلي لتتبع مستوى الطالب
+            saveRecordToStorage({
+                name: studentData.name,
+                id: studentData.id,
+                score: `${score}/${questions.length}`,
+                date: new Date().toLocaleString('ar-SA')
+            });
+        }
+
+        function saveRecordToStorage(record) {
+            let records = JSON.parse(localStorage.getItem('physics_test_records')) || [];
+            records.push(record);
+            localStorage.setItem('physics_test_records', JSON.stringify(records));
+        }
+
+        function loadAdminRecords() {
+            let records = JSON.parse(localStorage.getItem('physics_test_records')) || [];
+            const tbody = document.getElementById('admin-records');
+            tbody.innerHTML = '';
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">لا توجد سجلات مسجلة حتى الآن</td></tr>`;
+                return;
+            }
+            records.forEach(rec => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-3">${rec.name}</td>
+                        <td class="p-3">${rec.id}</td>
+                        <td class="p-3 font-bold text-indigo-600">${rec.score}</td>
+                        <td class="p-3 text-sm text-slate-500">${rec.date}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function clearRecords() {
+            if (confirm('هل أنت متأكد من مسح كافة سجلات الطلاب؟')) {
+                localStorage.removeItem('physics_test_records');
+                loadAdminRecords();
+            }
+        }
+    </script>
+</body>
+</html>
